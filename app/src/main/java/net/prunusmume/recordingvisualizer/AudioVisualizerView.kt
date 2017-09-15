@@ -20,7 +20,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyle: Int = 0) : 
         private val OFFSET_X = 30
     }
 
-    var samples: ShortArray = ShortArray(0)
+    var samples: ShortArray? = ShortArray(0)
         set(samples) {
             field = samples
             onSamplesChanged(field)
@@ -58,29 +58,28 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyle: Int = 0) : 
                 }
     }
 
-    private fun onSamplesChanged(samples: ShortArray) {
+    private fun onSamplesChanged(samples: ShortArray?) {
         rectPoints = createRectPoints(samples)
         postInvalidate()
     }
 
-    private fun createRectPoints(buffer: ShortArray): FloatArray {
+    private fun createRectPoints(buffer: ShortArray?): FloatArray {
         val max = Short.MAX_VALUE.toFloat()
-
-        var pointIndex = 0
         val points = FloatArray(viewWidth / OFFSET_X * 4)
-        (0 until viewWidth step OFFSET_X)
-                .forEach { x ->
-                    val y = if (samples.isEmpty()) {
+        (0 until points.size step 4)
+                .forEach { i ->
+                    val x = i / 4 * OFFSET_X
+                    val y = if (buffer == null || buffer.isEmpty()) {
                         centerY
                     } else {
                         val sample = buffer[(x * 1.0f / viewWidth * buffer.size).toInt()]
                         centerY - sample / max * centerY
                     }
 
-                    points[pointIndex++] = x.toFloat() + 2              // left
-                    points[pointIndex++] = y                            // top
-                    points[pointIndex++] = x.toFloat() + OFFSET_X - 2   // right
-                    points[pointIndex++] = viewHeight - y               // bottom
+                    points[i + 0] = x.toFloat() + 2              // left
+                    points[i + 1] = y                            // top
+                    points[i + 2] = x.toFloat() + OFFSET_X - 2   // right
+                    points[i + 3] = viewHeight - y               // bottom
                 }
 
         return points
